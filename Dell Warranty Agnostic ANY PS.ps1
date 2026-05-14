@@ -7,7 +7,7 @@ $ClientID     = "CLIENT_ID_HERE"
 $ClientSecret = "CLIENT_SECRET_HERE"
 
 # Input files
-$InputCSV  = "INPUT_PATH_FROM\ServiceTags Testing.csv"
+$InputCSV  = "INPUT_PATH_FROM\ServiceTags.csv"
 $InputXLSX = "INPUT_PATH_FROM\ServiceTags.xlsx"
 
 # Output file
