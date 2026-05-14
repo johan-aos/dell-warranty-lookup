@@ -1,24 +1,41 @@
 # ===============================================
-# Dell Warranty API V5 - Cross-Platform Version
+# Dell Warranty API V5 - v1.1
 # ===============================================
 
 # ---- CONFIGURATION ----
 $ClientID     = "YOUR_CLIENT_ID_HERE"
 $ClientSecret = "YOUR_CLIENT_SECRET_HERE"
 
-# Input files
 $InputCSV  = "YOUR_INPUT_PATH_FROM\ServiceTags.csv"
 $InputXLSX = "YOUR_INPUT_PATH_FROM\ServiceTags.xlsx"
 
-# Output file
 $OutputCSV = "YOUR_OUTPUT_PATH_TO\Dell_Warranty_Results.csv"
 
-# API URLs (DO NOT MODIFY)
+# Logging file
+$LogFile   = "YOUR_OUTPUT_PATH_TO\Dell_Warranty_Log.txt"
+
+# API URLs
 $TokenURL = "https://apigtwb2c.us.dell.com/auth/oauth/v2/token"
 $BaseURL  = "https://apigtwb2c.us.dell.com/PROD/sbil/eapi/v5/asset-entitlements?servicetags="
 
+# Batch size (Dell supports up to 100)
+$BatchSize = 100
+
 # ===============================================
-# STEP 0 — OS DETECTION (PowerShell 5 SAFE)
+# STEP 0 — LOGGING FUNCTION (NEW)
+# ===============================================
+function Write-Log {
+    param ($Message, $Color = "White")
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $entry = "$timestamp - $Message"
+
+    Write-Host $entry -ForegroundColor $Color
+    Add-Content -Path $LogFile -Value $entry
+}
+
+# ===============================================
+# STEP 0 — OS DETECTION
 # ===============================================
 $IsWindows = $false
 
@@ -29,18 +46,17 @@ if ($PSVersionTable.PSEdition -eq "Desktop" -or $env:OS -eq "Windows_NT") {
     $OSName = "Linux/macOS"
 }
 
-Write-Host "Detected OS: $OSName" -ForegroundColor Cyan
+Write-Log "Detected OS: $OSName" "Cyan"
 
 
 # ===============================================
-# STEP 1 — LOAD SERVICE TAGS
+# STEP 1 — LOAD SERVICE TAGS (IMPROVED CSV)
 # ===============================================
 $Tags = @()
 
-# ---- Try Excel input ONLY on Windows ----
 if ($IsWindows -and (Test-Path $InputXLSX)) {
 
-    Write-Host "Using XLSX input (Windows COM mode)..." -ForegroundColor Cyan
+    Write-Log "Using XLSX input..." "Cyan"
 
     try {
         $Excel    = New-Object -ComObject Excel.Application
@@ -63,35 +79,47 @@ if ($IsWindows -and (Test-Path $InputXLSX)) {
         $Excel.Quit()
     }
     catch {
-        Write-Host "⚠ Excel read failed. Falling back to CSV..." -ForegroundColor Yellow
+        Write-Log "Excel read failed. Falling back to CSV." "Yellow"
     }
 }
 
-# ---- Default: CSV input ----
 if ($Tags.Count -eq 0) {
 
-    Write-Host "Using CSV input..." -ForegroundColor Cyan
+    Write-Log "Using CSV input..." "Cyan"
 
     try {
         $Tags = Import-Csv $InputCSV | ForEach-Object {
-            $_.ServiceTag.Trim()
-        } | Where-Object {
-            $_ -match '^[A-Za-z0-9]{7}$'
+
+            # ✅ Flexible column handling
+            $value = $null
+
+            if ($_.ServiceTag) {
+                $value = $_.ServiceTag
+            } else {
+                # fallback to first column
+                $value = $_.PSObject.Properties.Value[0]
+            }
+
+            $value = $value.Trim()
+
+            if ($value -match '^[A-Za-z0-9]{7}$') {
+                $value
+            }
         }
     }
     catch {
-        Write-Host "❌ Unable to read CSV file." -ForegroundColor Red
+        Write-Log "ERROR: Unable to read CSV file." "Red"
         return
     }
 }
 
-Write-Host "Loaded $($Tags.Count) valid Service Tags." -ForegroundColor Green
+Write-Log "Loaded $($Tags.Count) valid Service Tags" "Green"
 
 
 # ===============================================
-# STEP 2 — AUTHENTICATE (OAuth 2.0)
+# STEP 2 — AUTHENTICATE
 # ===============================================
-Write-Host "Requesting OAuth token..." -ForegroundColor Cyan
+Write-Log "Requesting OAuth token..." "Cyan"
 
 $pair = "${ClientID}:${ClientSecret}"
 $encodedCreds = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair))
@@ -103,26 +131,34 @@ try {
     } -Body "grant_type=client_credentials"
 }
 catch {
-    Write-Host ("❌ AUTH FAILED -> " + $_.ErrorDetails.Message) -ForegroundColor Red
+    Write-Log "AUTH FAILED" "Red"
     return
 }
 
 $AccessToken = $tokenResponse.access_token
-Write-Host "Token acquired successfully." -ForegroundColor Green
+Write-Log "Token acquired successfully." "Green"
 
 
 # ===============================================
-# STEP 3 — WARRANTY LOOKUPS
+# STEP 3 — WARRANTY LOOKUPS (BATCHED)
 # ===============================================
-Write-Host "Querying warranty information..." -ForegroundColor Cyan
+Write-Log "Querying warranty information..." "Cyan"
 
 $Results = @()
 
-foreach ($tag in $Tags) {
+# Create batches of max 100 tags
+$Batches = for ($i=0; $i -lt $Tags.Count; $i += $BatchSize) {
+    $Tags[$i..([math]::Min($i + $BatchSize - 1, $Tags.Count - 1))]
+}
 
-    Write-Host ("Checking tag: " + $tag) -ForegroundColor Yellow
+foreach ($batch in $Batches) {
 
-    $uri = $BaseURL + $tag
+    # ✅ Keep original per-tag visibility
+    foreach ($tag in $batch) {
+        Write-Log "Checking tag: $tag" "Yellow"
+    }
+
+    $uri = $BaseURL + ($batch -join ",")
 
     try {
         $response = Invoke-RestMethod -Method Get -Uri $uri -Headers @{
@@ -131,7 +167,7 @@ foreach ($tag in $Tags) {
         }
     }
     catch {
-        Write-Host ("Error querying tag " + $tag + " -> " + $_.Exception.Message) -ForegroundColor Red
+        Write-Log "ERROR: Failed request for batch" "Red"
         continue
     }
 
@@ -157,4 +193,5 @@ foreach ($tag in $Tags) {
 # ===============================================
 $Results | Export-Csv -NoTypeInformation -Path $OutputCSV
 
-Write-Host "DONE! Warranty results exported to: $OutputCSV" -ForegroundColor Green
+Write-Log "DONE! Warranty results exported to: $OutputCSV" "Green"
+
