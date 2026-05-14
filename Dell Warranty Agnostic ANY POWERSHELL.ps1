@@ -1,5 +1,5 @@
 # ===============================================
-# Dell Warranty API V5 - v1.1
+# Dell Warranty API V5 - v1.2
 # ===============================================
 
 # ---- CONFIGURATION ----
@@ -18,11 +18,13 @@ $LogFile   = "YOUR_OUTPUT_PATH_TO\Dell_Warranty_Log.txt"
 $TokenURL = "https://apigtwb2c.us.dell.com/auth/oauth/v2/token"
 $BaseURL  = "https://apigtwb2c.us.dell.com/PROD/sbil/eapi/v5/asset-entitlements?servicetags="
 
-# Batch size (Dell supports up to 100)
-$BatchSize = 100
+# Batch + retry settings
+$BatchSize  = 100
+$MaxRetries = 3
+$RetryDelay = 2
 
 # ===============================================
-# STEP 0 — LOGGING FUNCTION (NEW)
+# STEP 0 — LOGGING FUNCTION
 # ===============================================
 function Write-Log {
     param ($Message, $Color = "White")
@@ -33,6 +35,8 @@ function Write-Log {
     Write-Host $entry -ForegroundColor $Color
     Add-Content -Path $LogFile -Value $entry
 }
+
+Write-Log "Script started"
 
 # ===============================================
 # STEP 0 — OS DETECTION
@@ -48,9 +52,8 @@ if ($PSVersionTable.PSEdition -eq "Desktop" -or $env:OS -eq "Windows_NT") {
 
 Write-Log "Detected OS: $OSName" "Cyan"
 
-
 # ===============================================
-# STEP 1 — LOAD SERVICE TAGS (IMPROVED CSV)
+# STEP 1 — LOAD SERVICE TAGS (ROBUST CSV)
 # ===============================================
 $Tags = @()
 
@@ -90,13 +93,9 @@ if ($Tags.Count -eq 0) {
     try {
         $Tags = Import-Csv $InputCSV | ForEach-Object {
 
-            # ✅ Flexible column handling
-            $value = $null
-
             if ($_.ServiceTag) {
                 $value = $_.ServiceTag
             } else {
-                # fallback to first column
                 $value = $_.PSObject.Properties.Value[0]
             }
 
@@ -114,7 +113,6 @@ if ($Tags.Count -eq 0) {
 }
 
 Write-Log "Loaded $($Tags.Count) valid Service Tags" "Green"
-
 
 # ===============================================
 # STEP 2 — AUTHENTICATE
@@ -138,60 +136,89 @@ catch {
 $AccessToken = $tokenResponse.access_token
 Write-Log "Token acquired successfully." "Green"
 
-
 # ===============================================
-# STEP 3 — WARRANTY LOOKUPS (BATCHED)
+# STEP 3 — WARRANTY LOOKUPS (BATCH + RETRY + 1 ROW PER TAG)
 # ===============================================
 Write-Log "Querying warranty information..." "Cyan"
 
 $Results = @()
+$TotalTags = $Tags.Count
+$Processed = 0
 
-# Create batches of max 100 tags
+# Create batches
 $Batches = for ($i=0; $i -lt $Tags.Count; $i += $BatchSize) {
-    $Tags[$i..([math]::Min($i + $BatchSize - 1, $Tags.Count - 1))]
+    $Tags[$i..([Math]::Min($i + $BatchSize - 1, $Tags.Count - 1))]
 }
 
 foreach ($batch in $Batches) {
 
-    # ✅ Keep original per-tag visibility
     foreach ($tag in $batch) {
-        Write-Log "Checking tag: $tag" "Yellow"
+        $Processed++
+        Write-Log "Checking tag [$Processed/$TotalTags]: $tag" "Yellow"
     }
 
     $uri = $BaseURL + ($batch -join ",")
 
-    try {
-        $response = Invoke-RestMethod -Method Get -Uri $uri -Headers @{
-            Authorization = "Bearer $AccessToken"
-            Accept        = "application/json"
+    $attempt = 1
+    $success = $false
+
+    while (-not $success -and $attempt -le $MaxRetries) {
+
+        try {
+            $response = Invoke-RestMethod -Method Get -Uri $uri -Headers @{
+                Authorization = "Bearer $AccessToken"
+                Accept        = "application/json"
+            }
+
+            $success = $true
         }
-    }
-    catch {
-        Write-Log "ERROR: Failed request for batch" "Red"
-        continue
+        catch {
+            if ($attempt -lt $MaxRetries) {
+                Write-Log "Retrying batch..." "Yellow"
+                Start-Sleep -Seconds $RetryDelay
+            } else {
+                Write-Log "ERROR: Failed batch after retries" "Red"
+            }
+        }
+
+        $attempt++
     }
 
+    if (-not $success) { continue }
+
     foreach ($asset in $response) {
-        foreach ($ent in $asset.entitlements) {
+
+        # ✅ FIX: Select SINGLE latest entitlement
+        $latestEntitlement = $asset.entitlements | Sort-Object endDate -Descending | Select-Object -First 1
+
+        if ($latestEntitlement) {
 
             $Results += [PSCustomObject]@{
                 ServiceTag   = $asset.serviceTag
                 Product      = $asset.productLineDescription
                 ShipDate     = $asset.shipDate
-                WarrantyType = $ent.entitlementType
-                StartDate    = $ent.startDate
-                EndDate      = $ent.endDate
-                Level        = $ent.serviceLevelDescription
-                Status       = if ((Get-Date $ent.endDate) -ge (Get-Date)) { "Active" } else { "Expired" }
+                WarrantyType = $latestEntitlement.entitlementType
+                StartDate    = $latestEntitlement.startDate
+                EndDate      = $latestEntitlement.endDate
+                Level        = $latestEntitlement.serviceLevelDescription
+                Status       = if ((Get-Date $latestEntitlement.endDate) -ge (Get-Date)) { "Active" } else { "Expired" }
             }
         }
     }
 }
 
 # ===============================================
-# STEP 4 — EXPORT RESULTS
+# STEP 4 — EXPORT
 # ===============================================
 $Results | Export-Csv -NoTypeInformation -Path $OutputCSV
 
-Write-Log "DONE! Warranty results exported to: $OutputCSV" "Green"
+# ===============================================
+# SUMMARY
+# ===============================================
+$TotalRows = $Results.Count
 
+Write-Log "Summary:" "Cyan"
+Write-Log "Total Service Tags processed: $TotalTags" "Green"
+Write-Log "Final rows exported: $TotalRows" "Green"
+
+Write-Log "DONE! Warranty results exported to: $OutputCSV" "Green"
