@@ -3,15 +3,15 @@
 # ===============================================
 
 # ---- CONFIGURATION ----
-$ClientID     = "CLIENT_ID_HERE"
-$ClientSecret = "CLIENT_SECRET_HERE"
+$ClientID     = "YOUR_CLIENT_ID_HERE"
+$ClientSecret = "YOUR_CLIENT_SECRET_HERE"
 
 # Input files
-$InputCSV  = "INPUT_PATH_FROM\ServiceTags.csv"
-$InputXLSX = "INPUT_PATH_FROM\ServiceTags.xlsx"
+$InputCSV  = "YOUR_INPUT_PATH_FROM\ServiceTags.csv"
+$InputXLSX = "YOUR_INPUT_PATH_FROM\ServiceTags.xlsx"
 
 # Output file
-$OutputCSV = "OUTPUT_PATH_TO\Dell_Warranty_Results.csv"
+$OutputCSV = "YOUR_OUTPUT_PATH_TO\Dell_Warranty_Results.csv"
 
 # API URLs (DO NOT MODIFY)
 $TokenURL = "https://apigtwb2c.us.dell.com/auth/oauth/v2/token"
