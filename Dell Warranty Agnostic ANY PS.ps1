@@ -3,15 +3,15 @@
 # ===============================================
 
 # ---- CONFIGURATION ----
-$ClientID     = "df2d1170-9dbd-48c5-898c-27754d3ea751"
-$ClientSecret = "8238b519f6424baf90b7454836669115"
+$ClientID     = "CLIENT_ID_HERE"
+$ClientSecret = "CLIENT_SECRET_HERE"
 
 # Input files
-$InputCSV  = "C:\Users\C0000001111\OneDrive - HUBBELL INC\Desktop\ServiceTags Testing.csv"
-$InputXLSX = "C:\Path\To\ServiceTags.xlsx"
+$InputCSV  = "INPUT_PATH_FROM\ServiceTags Testing.csv"
+$InputXLSX = "INPUT_PATH_FROM\ServiceTags.xlsx"
 
 # Output file
-$OutputCSV = "C:\Users\C0000001111\OneDrive - HUBBELL INC\Desktop\Dell_Warranty_Results.csv"
+$OutputCSV = "OUTPUT_PATH_TO\Dell_Warranty_Results.csv"
 
 # API URLs (DO NOT MODIFY)
 $TokenURL = "https://apigtwb2c.us.dell.com/auth/oauth/v2/token"
