@@ -45,8 +45,9 @@ C15YLG1
 ## Output Example
 
 ServiceTag, Product, EndDate, Status
+```
 6LSRKQ1, LATITUDE E5420, 2015-06-03, Expired
-
+```
 ---
 
 ## Tested Environments
