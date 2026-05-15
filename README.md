@@ -3,6 +3,7 @@
 ![API](https://img.shields.io/badge/API-Dell%20TechDirect-white)
 ![ZorinOS](https://img.shields.io/badge/tested-Zorin%20OS%2018.1-cyan)
 ![Windows11](https://img.shields.io/badge/tested-Windows%2011%20-cyan)
+![Pop! OS](https://img.shields.io/badge/tested-Pop!_OS%20-cyan)
 
 # Dell Warranty Lookup (TechDirect API v5)
 
@@ -72,6 +73,7 @@ ServiceTag, Product, EndDate, Status
 
 - Windows 10/11 (Powershell 5.1, 7)
 - Zorin OS 18.1 (Ubuntu based pwsh)
+- Pop! OS 24.04 (Ubuntu based pwsh)
 - PowerShell Core (pwsh)
 
 ---
