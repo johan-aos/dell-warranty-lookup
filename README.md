@@ -1,6 +1,8 @@
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%20%7C%207+-blue)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-green)
-![API](https://img.shields.io/badge/API-Dell%20TechDirect-orange)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-orange)
+![API](https://img.shields.io/badge/API-Dell%20TechDirect-white)
+![ZorinOS](https://img.shields.io/badge/tested-Zorin%20OS%2018.1-cyan)
+![Windows11](https://img.shields.io/badge/tested-Windows%2011%20-cyan)
 
 # Dell Warranty Lookup (TechDirect API v5)
 
@@ -15,8 +17,24 @@ PowerShell script to retrieve Dell warranty information using Service Tags via t
 - OAuth 2.0 authentication
 - Structured CSV output
 - Compatible with PowerShell 5.1 and 7+
+- Batch processing (up to 100 ServiceTags per request)
+- One ServiceTag = one row (latest warranty only)
+- Built-in logging file for execution tracking
+- Linux-native execution support via `pwsh`
 
 ---
+
+### Linux / macOS Notes
+
+- Requires PowerShell (`pwsh`)
+- Script can be executed natively using:
+
+```bash
+chmod +x Dell_Warranty_Lookup.ps1
+./Dell_Warranty_Lookup.ps1
+```
+
+--- 
 
 ## Requirements
 
@@ -53,5 +71,7 @@ ServiceTag, Product, EndDate, Status
 ## Tested Environments
 
 - Windows 10/11 (Powershell 5.1, 7)
+- Zorin OS 18.1 (Ubuntu based pwsh)
+- PowerShell Core (pwsh)
 
 ---
