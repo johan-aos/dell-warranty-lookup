@@ -1,5 +1,5 @@
 ![PowerShell](https://img.shields.io/badge/PowerShell-5.1%20%7C%207+-blue)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-orange)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-purple)
 ![API](https://img.shields.io/badge/API-Dell%20TechDirect-white)
 ![ZorinOS](https://img.shields.io/badge/tested-Zorin%20OS%2018.1-cyan)
 ![Windows11](https://img.shields.io/badge/tested-Windows%2011%20-cyan)
