@@ -30,7 +30,7 @@ PowerShell script to retrieve Dell warranty information using Service Tags via t
 
 ## Input Format
 
-⚠ Column header must be named `ServiceTag` (case-sensitive)
+⚠ It is recommended that the column header is named `ServiceTag` (case-sensitive), although I've added some flexibility to the the input file.
 
 Create a file named `ServiceTags.csv`(This will contain all the Service Tags you want to verify against the Dell API): 
 
