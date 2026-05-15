@@ -1,6 +1,16 @@
+#!/usr/bin/env pwsh
+
 # ===============================================
-# Dell Warranty API V5 - v1.2
+# Dell Warranty API V5 - v2.0 (Cross-platform)
 # ===============================================
+
+# ===============================================
+# PowerShell runtime validation
+# ===============================================
+if (-not $PSVersionTable.PSVersion) {
+    Write-Host "ERROR: This script must be run using PowerShell (pwsh)." -ForegroundColor Red
+    exit 1
+}
 
 # ---- CONFIGURATION ----
 $ClientID     = "YOUR_CLIENT_ID_HERE"
@@ -39,21 +49,64 @@ function Write-Log {
 Write-Log "Script started"
 
 # ===============================================
-# STEP 0 — OS DETECTION
+# STEP 1 — OS DETECTION (Enhanced to ID distro)
 # ===============================================
+
 $IsWindows = $false
+$IsLinux   = $false
+$IsMacOS   = $false
+
+$LinuxDistro = "Unknown"
+$LinuxBase   = "Unknown"
 
 if ($PSVersionTable.PSEdition -eq "Desktop" -or $env:OS -eq "Windows_NT") {
+
     $IsWindows = $true
     $OSName = "Windows"
-} else {
-    $OSName = "Linux/macOS"
+
+}
+elseif ($IsMacOS) {
+
+    $OSName = "macOS"
+
+}
+else {
+
+    $IsLinux = $true
+    $OSName = "Linux"
+
+    # ✅ Detect Linux distribution
+    if (Test-Path "/etc/os-release") {
+
+        $osInfo = Get-Content "/etc/os-release"
+
+        foreach ($line in $osInfo) {
+
+            if ($line -match "^ID=") {
+                $LinuxDistro = $line.Split("=")[1].Replace('"','')
+            }
+
+            if ($line -match "^ID_LIKE=") {
+                $LinuxBase = $line.Split("=")[1].Replace('"','')
+            }
+        }
+    }
+
+    if (-not $LinuxBase) {
+        $LinuxBase = $LinuxDistro
+    }
 }
 
+# ✅ Logging output
 Write-Log "Detected OS: $OSName" "Cyan"
 
+if ($IsLinux) {
+    Write-Log "Linux Distro: $LinuxDistro" "Cyan"
+    Write-Log "Linux Base: $LinuxBase" "Cyan"
+}
+
 # ===============================================
-# STEP 1 — LOAD SERVICE TAGS (ROBUST CSV)
+# STEP 2 — LOAD SERVICE TAGS (Robusted CSV)
 # ===============================================
 $Tags = @()
 
@@ -115,7 +168,7 @@ if ($Tags.Count -eq 0) {
 Write-Log "Loaded $($Tags.Count) valid Service Tags" "Green"
 
 # ===============================================
-# STEP 2 — AUTHENTICATE
+# STEP 3 — AUTHENTICATION
 # ===============================================
 Write-Log "Requesting OAuth token..." "Cyan"
 
@@ -137,7 +190,7 @@ $AccessToken = $tokenResponse.access_token
 Write-Log "Token acquired successfully." "Green"
 
 # ===============================================
-# STEP 3 — WARRANTY LOOKUPS (BATCH + RETRY + 1 ROW PER TAG)
+# STEP 4 — WARRANTY LOOKUPS (Batch + retry + 1 row per tag)
 # ===============================================
 Write-Log "Querying warranty information..." "Cyan"
 
@@ -208,7 +261,7 @@ foreach ($batch in $Batches) {
 }
 
 # ===============================================
-# STEP 4 — EXPORT
+# STEP 5 — EXPORT
 # ===============================================
 $Results | Export-Csv -NoTypeInformation -Path $OutputCSV
 
