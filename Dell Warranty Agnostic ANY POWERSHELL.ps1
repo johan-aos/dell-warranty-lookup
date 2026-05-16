@@ -33,35 +33,17 @@ $BatchSize  = 100
 $MaxRetries = 3
 $RetryDelay = 2
 
-# ===============================================
-# STEP 0 — LOGGING FUNCTION
-# ===============================================
-function Write-Log {
-    param ($Message, $Color = "White")
+# ===================================================
+# STEP 1 — OS DETECTION (Enhanced to show OS/distro)
+# ===================================================
 
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $entry = "$timestamp - $Message"
-
-    Write-Host $entry -ForegroundColor $Color
-    Add-Content -Path $LogFile -Value $entry
-}
-
-Write-Log "Script started"
-
-# ===============================================
-# STEP 1 — OS DETECTION (Enhanced to ID distro)
-# ===============================================
-
-$IsWindows = $false
-$IsLinux   = $false
-$IsMacOS   = $false
-
+# Use built-in variables directly
+$OSName = "Unknown"
 $LinuxDistro = "Unknown"
 $LinuxBase   = "Unknown"
 
-if ($PSVersionTable.PSEdition -eq "Desktop" -or $env:OS -eq "Windows_NT") {
+if ($IsWindows) {
 
-    $IsWindows = $true
     $OSName = "Windows"
 
 }
@@ -70,12 +52,10 @@ elseif ($IsMacOS) {
     $OSName = "macOS"
 
 }
-else {
+elseif ($IsLinux) {
 
-    $IsLinux = $true
     $OSName = "Linux"
 
-    # ✅ Detect Linux distribution
     if (Test-Path "/etc/os-release") {
 
         $osInfo = Get-Content "/etc/os-release"
@@ -97,14 +77,12 @@ else {
     }
 }
 
-# ✅ Logging output
 Write-Log "Detected OS: $OSName" "Cyan"
 
 if ($IsLinux) {
     Write-Log "Linux Distro: $LinuxDistro" "Cyan"
     Write-Log "Linux Base: $LinuxBase" "Cyan"
 }
-
 # ===============================================
 # STEP 2 — LOAD SERVICE TAGS (Robusted CSV)
 # ===============================================
