@@ -84,7 +84,7 @@ if ($IsLinux) {
     Write-Log "Linux Base: $LinuxBase" "Cyan"
 }
 # ===============================================
-# STEP 2 — LOAD SERVICE TAGS (Robusted CSV)
+# STEP 2 — LOAD SERVICE TAGS (Robust CSV)
 # ===============================================
 $Tags = @()
 
@@ -146,7 +146,7 @@ if ($Tags.Count -eq 0) {
 Write-Log "Loaded $($Tags.Count) valid Service Tags" "Green"
 
 # ===============================================
-# STEP 3 — AUTHENTICATION
+# STEP 3 — AUTHENTICATION (Dell API callouts)
 # ===============================================
 Write-Log "Requesting OAuth token..." "Cyan"
 
