@@ -4,6 +4,7 @@
 ![ZorinOS](https://img.shields.io/badge/tested-Zorin%20OS%2018.1-cyan)
 ![Windows11](https://img.shields.io/badge/tested-Windows%2011%20-cyan)
 ![Pop! OS](https://img.shields.io/badge/tested-Pop!_OS%20-cyan)
+![Nobara GNOME](https://img.shields.io/badge/tested-Nobara_GNOME%20-cyan)
 
 # Dell Warranty Lookup (TechDirect API v5)
 
