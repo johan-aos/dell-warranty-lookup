@@ -33,6 +33,21 @@ $BatchSize  = 100
 $MaxRetries = 3
 $RetryDelay = 2
 
+# ===============================================
+# STEP 0 — LOGGING FUNCTION
+# ===============================================
+function Write-Log {
+    param ($Message, $Color = "White")
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $entry = "$timestamp - $Message"
+
+    Write-Host $entry -ForegroundColor $Color
+    Add-Content -Path $LogFile -Value $entry
+}
+
+Write-Log "Script started"
+
 # ===================================================
 # STEP 1 — OS DETECTION (Enhanced to show OS/distro)
 # ===================================================
