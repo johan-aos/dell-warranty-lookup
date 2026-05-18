@@ -26,7 +26,7 @@ PowerShell script to retrieve Dell warranty information using Service Tags via t
 
 ---
 
-### Linux / macOS Notes
+## Linux / macOS Notes
 
 - Requires PowerShell (`pwsh`)
 - Script can be executed natively using:
@@ -72,10 +72,10 @@ ServiceTag, Product, EndDate, Status
 
 ## Tested Environments
 
+- PowerShell Core
 - Windows 10/11 (Powershell 5.1, 7)
 - Zorin OS 18.1 (Ubuntu based pwsh)
 - Pop! OS 24.04 (Ubuntu based pwsh)
 - Nobara GNOME (Fedora 44)
-- PowerShell Core (pwsh)
 
 ---
