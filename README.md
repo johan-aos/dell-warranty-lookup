@@ -75,6 +75,7 @@ ServiceTag, Product, EndDate, Status
 - Windows 10/11 (Powershell 5.1, 7)
 - Zorin OS 18.1 (Ubuntu based pwsh)
 - Pop! OS 24.04 (Ubuntu based pwsh)
+- Novara GNOME (Fedora 44)
 - PowerShell Core (pwsh)
 
 ---
